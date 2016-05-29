@@ -29,13 +29,18 @@ public:
 	void calculateBounds();
 
 	void printModelInfo();
+	void printModelVertices();
 
 	void rotateVertices(float, float, float, float);
 	void translateVertices(float, float, float);
 	void scaleVertices(float, float, float);
+	void applyTransformationToModel(float*, float*, float*, float*);
 
-	static void matrixMultiplyVector(float**, float*);
+	static void matrixMultiplyVertex(float**, int, int, float*, float*);
 	static void matrixMultiply(float**, int, int, float**, int, int, float**);
+	static void normalizeVector(float, float, float, float*);
+	static void crossVectors(float*, float*, float*);
+	
 
 private:
 	int headerSize;

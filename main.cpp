@@ -54,10 +54,22 @@ int main(int argc, char *argv[])
 	vector<string> linesOfFile = readFile(infile);
 
 	Model model = Model(linesOfFile);
-	model.printModelInfo();
+	model.scaleVertices(7, 2, 1);
+	model.translateVertices(30, 2, 1);
+	model.rotateVertices( 4, 5, 6, 63);
+	model.printModelVertices();
+	/*
+	model.scaleVertices(1,1,1);
+	model.calculateBounds();
+	*/
+
+	//model.printModelInfo();
 	//writeFile(linesOfFile, outfile);
 
-	system("pause");
+
+
+
+	system("pause"); // Replace with input loop
 
 	return 1;
 }
@@ -94,5 +106,17 @@ cout << target[i][j] << " ";
 cout << endl;
 }
 
+float matrix1[] = { 1, 0, 1 };
+float matrix2[] = { 2, 0, 1 };
+float matrix3[] = { 0, 1, 3 };
+float* matrix[3] = { matrix1, matrix2, matrix3 };
+
+float vertex[3] = {1, 1, 1};
+
+float res[3];
+
+Model::matrixMultiplyVertex(matrix, 3, 3,vertex, res);
+
+cout << res[0] << " " << res[1] << " " << res[2] << endl;
 
 */
