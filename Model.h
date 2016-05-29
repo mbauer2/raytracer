@@ -1,17 +1,46 @@
+#ifndef MODEL_H_INCLUDE
+#define MODEL_H_INCLUDE
+
+#include <vector>
+#include <string>
+
+using std::vector;
+using std::string;
+
 #pragma once
+
+// Contains: list of strings for header
+//           list of vertices
+//           list of faces
+
 class Model
 {
 public:
 
-	inline int getLines() { return lines; };
-	inline bool getIsNum() { return isPolygon; };
-
 	Model();
-	Model(int, bool);
+	Model(vector<string>);
+	Model(int, vector<string>, int, float**, int, int**);
 	~Model();
+	inline int getHeaderSize() { return headerSize; };
+	inline int getNumVertices() { return numVertices; };
+	inline int getNumFaces() { return numFaces; };
+	inline bool getCorrect() { return correct; };
+
+	void calculateBounds();
+
+	void printModelInfo();
 
 private:
-	int lines;
-	bool isPolygon;
+	int headerSize;
+	vector<string> header;
+	int numVertices;
+	float** vertices;
+	int numFaces;
+	int** faces;
+	float* currentAverage;
+	float* currentBounds;
+
+	bool correct = true;
 };
 
+#endif
