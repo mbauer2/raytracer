@@ -30,6 +30,13 @@ public:
 
 	void printModelInfo();
 
+	void rotateVertices(float, float, float, float);
+	void translateVertices(float, float, float);
+	void scaleVertices(float, float, float);
+
+	static void matrixMultiplyVector(float**, float*);
+	static void matrixMultiply(float**, int, int, float**, int, int, float**);
+
 private:
 	int headerSize;
 	vector<string> header;
@@ -42,5 +49,6 @@ private:
 
 	bool correct = true;
 };
+
 
 #endif

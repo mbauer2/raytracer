@@ -1,4 +1,3 @@
-
 #include "Model.h"
 #include <iostream>
 #include <vector>
@@ -10,6 +9,7 @@ using namespace std;
 void readHeader(vector<string>&, int*);
 void tokenizeVertex(string, float*);
 float** readVertices(vector<string>, int, int);
+
 // Contains: list of strings for header
 //           list of vertices
 //           list of faces
@@ -128,12 +128,12 @@ float** readVertices(vector<string> lines, int startIndex, int numVertices) {
 
 void Model::calculateBounds()
 {
-	float minX = 0;
-	float maxX = 0;
-	float minY = 0;
-	float maxY = 0;
-	float minZ = 0;
-	float maxZ = 0;
+	float minX = vertices[0][0];
+	float maxX = vertices[0][0];
+	float minY = vertices[0][1];
+	float maxY = vertices[0][1];
+	float minZ = vertices[0][2];
+	float maxZ = vertices[0][2];
 
 	float xSum = 0;
 	float ySum = 0;
@@ -195,3 +195,32 @@ void Model::printModelInfo() {
 		<< endl;
 }
 
+void Model::rotateVertices(float rx, float ry, float rz, float theta) {
+	//
+}
+
+void Model::translateVertices(float tx, float ty, float tz) {
+	// Can either mulitpy by matrix or just add values here
+
+}
+
+void Model::scaleVertices(float sx, float sy, float sz) {
+
+}
+
+//These don't really belong here
+void Model::matrixMultiplyVector(float** matrix, float* vector) {
+	//Checking dimensions is important here, currently assuming correct input
+}
+
+//These don't really belong here
+void Model::matrixMultiply(float** matrix, int mwidth, int mheight, float** other_matrix, int owidth, int oheight, float** target) {
+
+	for (int i = 0; i < mheight; i++) {
+		for (int j = 0; j < owidth; j++) {
+			for (int l = 0; l < mwidth; l++) {
+				target[i][j] += matrix[i][l] * other_matrix[l][j];
+			}
+		}
+	}
+}
