@@ -1,5 +1,6 @@
 #include "Matrix.h"
 #include <iterator>
+#include <iostream>
 using namespace std;
 
 Matrix::Matrix()
@@ -10,6 +11,7 @@ Matrix::Matrix()
 Matrix::Matrix(int height, float diagonal_value) {
 	this->height = height;
 	this->width = height;
+	data = new float*[height];
 	for (int i = 0; i < height; i++) {
 		float* line_data = new float[width];
 		for (int j = 0; j < width; j++) {
@@ -25,6 +27,7 @@ Matrix::Matrix(int height, float diagonal_value) {
 
 }
 
+// Creates a new matrix with everything set to initial_value
 Matrix::Matrix(int height, int width, float initial_value) {
 	this->height = height;
 	this->width = width;
@@ -38,17 +41,63 @@ Matrix::Matrix(int height, int width, float initial_value) {
 	}
 }
 
+// Creates a new matrix with a deep copy of whatever is in data
+Matrix::Matrix(float** data, int height, int width) {
+	this->height = height;
+	this->width = width;
+	this->data = new float*[height];
+	for (int i = 0; i < height; i++) {
+		float* line_data = new float[width];
+		for (int j = 0; j < width; j++) {
+			float currVal = data[i][j];
+			line_data[j] = currVal;
+		}
+		this->data[i] = line_data;
+	}
+}
+
+// Copy constructor
+Matrix::Matrix(const Matrix& m) {
+	this->height = m.getHeight();
+	this->width = m.getWidth();
+	this->data = new float*[height];
+	for (int i = 0; i < height; i++) {
+		float* line_data = new float[width];
+		for (int j = 0; j < width; j++) {
+			line_data[j] = m.get(i,j);
+		}
+		this->data[i] = line_data;
+	}
+}
+
 Matrix::~Matrix()
 {
 	for (int i = 0; i < height; i++) {
 		delete[] data[i];
 	}
-	delete[] data;
-	data = NULL;
+	if (data != NULL) {
+		delete[] data;
+		data = NULL;
+	}
 }
 
-float Matrix::get(int row, int column) {
+void Matrix::print() {
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			cout << get(i, j) << " ";
+		}
+		cout << endl;
+	}
+}
+
+float Matrix::get(int row, int column) const {
 	return data[row][column];
+}
+
+void Matrix::getRow(int row, float* target) const {
+	target[0] = data[row][0];
+	target[1] = data[row][1];
+	target[2] = data[row][2];
 }
 
 void Matrix::set(int row, int column, float val) {
@@ -82,7 +131,7 @@ void Matrix::multiply(Matrix other_matrix) {
 }
 
 // Does not modify this
-void Matrix::multiply(Matrix other_matrix, Matrix target) {
+void Matrix::multiply(Matrix other_matrix, Matrix& target) const {
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < other_matrix.getWidth(); j++) {
 			for (int l = 0; l < width; l++) {
@@ -93,23 +142,23 @@ void Matrix::multiply(Matrix other_matrix, Matrix target) {
 	}
 }
 
-void Matrix::matrixMultiplyVertex(Matrix vertex, Matrix& target) {
+void Matrix::matrixMultiplyVertex(float* vertex, float* target) const {
 	//Checking dimensions is important here, currently assuming correct input
 
 	//Transpose vertex for multiplication, add 1 for homogenous
 	Matrix newVertex = Matrix(4, 1, 0);
-	newVertex.set(0, 0, vertex.get(0, 0));
-	newVertex.set(1, 0, vertex.get(0, 1));
-	newVertex.set(2, 0, vertex.get(0, 2));
-	newVertex.set(3, 0, vertex.get(0, 3));
+	newVertex.set(0, 0, vertex[0]);
+	newVertex.set(1, 0, vertex[1]);
+	newVertex.set(2, 0, vertex[2]);
+	newVertex.set(3, 0, 1);
 
 	Matrix newTarget = Matrix(4, 1, 0);
 
 	multiply(newVertex, newTarget);
 
-	target.set(0, 0, newTarget.get(0, 0));
-	target.set(0, 1, newTarget.get(1, 0));
-	target.set(0, 2, newTarget.get(2, 0));
+	target[0] = newTarget.get(0, 0);
+	target[1] = newTarget.get(1, 0);
+	target[2] = newTarget.get(2, 0);
 }
 
 

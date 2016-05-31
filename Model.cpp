@@ -7,7 +7,7 @@
 #include <math.h>
 using namespace std;
 
-#define PI 3.14159265
+#define PI 3.14159265f
 
 void readHeader(vector<string>&, int*);
 void tokenizeVertex(string, float*);
@@ -37,7 +37,9 @@ Model::Model(vector<string> lines) {
 			header.push_back(lines.at(i));
 		}
 
-		vertices = readVertices(lines, headerSize, numVertices);
+
+		float** vertexData = readVertices(lines, headerSize, numVertices);
+		vertices = Matrix(vertexData, numVertices, 3);
 		calculateBounds();
 	}
 	else {
@@ -45,7 +47,7 @@ Model::Model(vector<string> lines) {
 	}
 }
 
-Model::Model(int headerSize, vector<string> header, int numVertices, float** vertices, int numFaces, int** faces) {
+Model::Model(int headerSize, vector<string> header, int numVertices, Matrix vertices, int numFaces, int** faces) {
 	this->headerSize = headerSize;
 	this->header = header;
 	this->numVertices = numVertices;
@@ -59,16 +61,15 @@ Model::~Model()
 {
 	cout << "Model is being deleted." << endl;
 
-	// Need to delete Vertices from heap
-	for (int i = 0; i < numVertices; i++) {
-		delete[] vertices[i];
-	}
-	delete[] vertices;
-	vertices = NULL;
-
 	// Delete other info
-	delete[] currentAverage;
-	delete[] currentBounds;
+	if (currentAverage !=NULL) {
+		delete[] currentAverage;
+		currentAverage = NULL;
+	}
+	if (currentBounds != NULL) {
+		delete[] currentBounds;
+		currentBounds = NULL;
+	}
 }
 
 //Gets the current important info, later expand to read properties
@@ -119,7 +120,7 @@ float** readVertices(vector<string> lines, int startIndex, int numVertices) {
 
 	int endIndex = startIndex + numVertices;
 
-	for (unsigned int i = startIndex; i < endIndex; i++) {
+	for (int i = startIndex; i < endIndex; i++) {
 		float* data = new float[3];
 		tokenizeVertex(lines.at(i), data);
 		toReturn[i - startIndex] = data;
@@ -130,12 +131,12 @@ float** readVertices(vector<string> lines, int startIndex, int numVertices) {
 
 void Model::calculateBounds()
 {
-	float minX = vertices[0][0];
-	float maxX = vertices[0][0];
-	float minY = vertices[0][1];
-	float maxY = vertices[0][1];
-	float minZ = vertices[0][2];
-	float maxZ = vertices[0][2];
+	float minX = vertices.get(0, 0);
+	float maxX = vertices.get(0, 0);
+	float minY = vertices.get(0, 1);
+	float maxY = vertices.get(0, 1);
+	float minZ = vertices.get(0, 2);
+	float maxZ = vertices.get(0, 2);
 
 	float xSum = 0;
 	float ySum = 0;
@@ -143,7 +144,8 @@ void Model::calculateBounds()
 
 	for (int i = 0; i < numVertices; i++) {
 		//cout << currVertex[1] << endl;
-		float* currVertex = vertices[i];
+		float currVertex[3];
+		vertices.getRow(i, currVertex);
 		if (currVertex[0] > maxX) {
 			maxX = currVertex[0];
 		}
@@ -199,23 +201,23 @@ void Model::printModelInfo() {
 
 void Model::printModelVertices() {
 	for (int i = 0; i < 3; i++) {
-		cout << "[" << vertices[i][0] << ",   "
-			<< vertices[i][1] << ",   "
-			<< vertices[i][2] << "]"
+		cout << "[" << vertices.get(i,0) << ",   "
+			<< vertices.get(i,1) << ",   "
+			<< vertices.get(i,2) << "]"
 			<< endl;
 	}
 
 	for (int i = numVertices -3; i < numVertices; i++) {
-		cout << "[" << vertices[i][0] << ",   "
-			<< vertices[i][1] << ",   "
-			<< vertices[i][2] << "]"
+		cout << "[" << vertices.get(i,0) << ",   "
+			<< vertices.get(i,1) << ",   "
+			<< vertices.get(i,2) << "]"
 			<< endl;
 	}
 }
 
-void Model::rotateVertices(float rx, float ry, float rz, float theta) {
-    // Convert theta to radians
-	theta = theta*PI / 180.0;
+Matrix Model::getRotationMatrix(float rx, float ry, float rz, float theta) {
+	// Convert theta to radians
+	theta = theta*PI / 180;
 
 	// Normalize axis of rotation
 	float w[3];
@@ -230,7 +232,7 @@ void Model::rotateVertices(float rx, float ry, float rz, float theta) {
 	}
 
 	//Non-parallel vector
-	float m[3] = {w[0], w[1], w[2]};
+	float m[3] = { w[0], w[1], w[2] };
 	m[min_w] = 1;
 	normalizeVector(m[0], m[1], m[2], m);
 
@@ -249,14 +251,16 @@ void Model::rotateVertices(float rx, float ry, float rz, float theta) {
 	float rd_row2[4] = { v[0], v[1], v[2], 0 };
 	float rd_row3[4] = { w[0], w[1], w[2], 0 };
 	float rd_row4[4] = { 0, 0, 0, 1 };
-	float* rotateDataMatrix[4] = { rd_row1, rd_row2, rd_row3, rd_row4 };
+	float* rotateData[4] = { rd_row1, rd_row2, rd_row3, rd_row4 };
+	Matrix rotateDataMatrix = Matrix(rotateData, 4, 4);
 
 	//We need this matrix to perform the rotation by theta
 	float rz_row1[4] = { cos(theta), -sin(theta), 0, 0 };
 	float rz_row2[4] = { sin(theta), cos(theta),  0, 0 };
 	float rz_row3[4] = { 0,          0,           1, 0 };
 	float rz_row4[4] = { 0,          0,           0, 1 };
-	float* rotateAboutZMatrix[4] = { rz_row1, rz_row2, rz_row3, rz_row4 };
+	float* rotateAboutZ[4] = { rz_row1, rz_row2, rz_row3, rz_row4 };
+	Matrix rotateAboutZMatrix = Matrix(rotateAboutZ, 4, 4);
 
 	// We need this matrix to reverse process of making Z the axis of rotation
 	// Matrix transposed is inverse if orthonormal
@@ -264,84 +268,52 @@ void Model::rotateVertices(float rx, float ry, float rz, float theta) {
 	float rdt_row2[4] = { u[1], v[1], w[1], 0 };
 	float rdt_row3[4] = { u[2], v[2], w[2], 0 };
 	float rdt_row4[4] = { 0, 0, 0, 1 };
-	float* rotateDataTransposeMatrix[4] = { rdt_row1, rdt_row2, rdt_row3, rdt_row4 };
+	float* rotateDataTranspose[4] = { rdt_row1, rdt_row2, rdt_row3, rdt_row4 };
+	Matrix rotateDataTransposeMatrix = Matrix(rotateDataTranspose, 4, 4);
 
-	float mrow1[] = { 0, 0, 0, 0 };
-	float mrow2[] = { 0, 0, 0, 0 };
-	float mrow3[] = { 0, 0, 0, 0 };
-	float mrow4[] = { 0, 0, 0, 0 };
-	float* middleMatrix[4] = {mrow1, mrow2, mrow3, mrow4};
-	matrixMultiply(rotateAboutZMatrix, 4, 4, rotateDataMatrix, 4, 4, middleMatrix);
-	
-	float frow1[] = { 0, 0, 0, 0 };
-	float frow2[] = { 0, 0, 0, 0 };
-	float frow3[] = { 0, 0, 0, 0 };
-	float frow4[] = { 0, 0, 0, 0 };
-	float* finalRotationMatrix[4] = {frow1, frow2, frow3, frow4};
-	matrixMultiply(rotateDataTransposeMatrix, 4, 4, middleMatrix, 4, 4, finalRotationMatrix);
 
-	applyTransformationToModel(finalRotationMatrix[0], finalRotationMatrix[1], finalRotationMatrix[2], finalRotationMatrix[3]);
+	rotateAboutZMatrix.multiply(rotateDataMatrix);
+	rotateDataTransposeMatrix.multiply(rotateAboutZMatrix);
+
+	return rotateDataTransposeMatrix;
+
 }
 
-void Model::translateVertices(float tx, float ty, float tz) {
-	// Can either mulitpy by matrix or just add values here
-
-	float row1[4] = {1, 0, 0, tx};
+Matrix Model::getTranslationMatrix(float tx, float ty, float tz) {
+	float row1[4] = { 1, 0, 0, tx };
 	float row2[4] = { 0, 1, 0, ty };
 	float row3[4] = { 0, 0, 1, tz };
 	float row4[4] = { 0, 0, 0, 1 };
 
-	applyTransformationToModel(row1, row2, row3, row4);
+	float* transformationMatrix[4] = { row1, row2, row3, row4 };
 
+	return Matrix(transformationMatrix, 4, 4);
 }
 
-void Model::scaleVertices(float sx, float sy, float sz) {
+Matrix Model::getScaleMatrix(float sx, float sy, float sz) {
 	float row1[4] = { sx, 0, 0, 0 };
 	float row2[4] = { 0, sy, 0, 0 };
 	float row3[4] = { 0, 0, sz, 0 };
 	float row4[4] = { 0, 0, 0, 1 };
 
-	applyTransformationToModel(row1, row2, row3, row4);
+	float* transformationMatrix[4] = { row1, row2, row3, row4 };
+
+	return Matrix(transformationMatrix, 4, 4);
 }
 
-void Model::applyTransformationToModel(float* row1, float* row2, float* row3, float* row4) {
-
-	float* transformationMatrix[4] = { row1, row2, row3, row4 };
+void Model::applyTransformationToModel(Matrix transformationMatrix) {
 
 	for (int i = 0; i < numVertices; i++) {
 		float target[3];
-		matrixMultiplyVertex(transformationMatrix, 4, 4, vertices[i], target);
-		vertices[i][0] = target[0];
-		vertices[i][1] = target[1];
-		vertices[i][2] = target[2];
+		float currVertex[3];
+		vertices.getRow(i, currVertex);
+		transformationMatrix.matrixMultiplyVertex(currVertex, target);
+		vertices.set(i, 0, target[0]);
+		vertices.set(i, 1, target[1]);
+		vertices.set(i, 2, target[2]);
 	}
 }
 
-//These don't really belong here
-void Model::matrixMultiplyVertex(float** matrix, int mwidth, int mheight, float* vertex, float* target) {
-	//Checking dimensions is important here, currently assuming correct input
-
-	//Transpose vertex for multiplication, add 1 for homogenous
-	float row1[1] = { vertex[0] };
-	float row2[1] = { vertex[1] };
-	float row3[1] = { vertex[2] };
-	float row4[1] = { 1 };
-
-	float* newVertex[4] = { row1, row2, row3, row4};
-
-	float new_target1[] = {0};
-	float new_target2[] = {0};
-	float new_target3[] = {0};
-	float new_target4[] = {0};
-	float* new_target[4] = { new_target1, new_target2, new_target3, new_target4 };
-
-	matrixMultiply(matrix, mwidth, mheight, newVertex, 1, 4, new_target);
-
-	target[0] = new_target[0][0];
-	target[1] = new_target[1][0];
-	target[2] = new_target[2][0];
-
-}
 
 //These don't really belong here
 void Model::matrixMultiply(float** matrix, int mwidth, int mheight, float** other_matrix, int owidth, int oheight, float** target) {

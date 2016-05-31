@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include "Matrix.h"
 
 using std::vector;
 using std::string;
@@ -19,7 +20,7 @@ public:
 
 	Model();
 	Model(vector<string>);
-	Model(int, vector<string>, int, float**, int, int**);
+	Model(int, vector<string>, int, Matrix, int, int**);
 	~Model();
 	inline int getHeaderSize() { return headerSize; };
 	inline int getNumVertices() { return numVertices; };
@@ -31,12 +32,11 @@ public:
 	void printModelInfo();
 	void printModelVertices();
 
-	void rotateVertices(float, float, float, float);
-	void translateVertices(float, float, float);
-	void scaleVertices(float, float, float);
-	void applyTransformationToModel(float*, float*, float*, float*);
+	Matrix getRotationMatrix(float, float, float, float);
+	Matrix getTranslationMatrix(float, float, float);
+	Matrix getScaleMatrix(float, float, float);
+	void applyTransformationToModel(Matrix);
 
-	static void matrixMultiplyVertex(float**, int, int, float*, float*);
 	static void matrixMultiply(float**, int, int, float**, int, int, float**);
 	static void normalizeVector(float, float, float, float*);
 	static void crossVectors(float*, float*, float*);
@@ -46,7 +46,7 @@ private:
 	int headerSize;
 	vector<string> header;
 	int numVertices;
-	float** vertices;
+	Matrix vertices;
 	int numFaces;
 	int** faces;
 	float* currentAverage;
