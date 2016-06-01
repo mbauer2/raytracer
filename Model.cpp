@@ -40,6 +40,13 @@ Model::Model(vector<string> lines) {
 
 		float** vertexData = readVertices(lines, headerSize, numVertices);
 		vertices = Matrix(vertexData, numVertices, 3);
+		// Should transition this to something else in the future, but for right now
+		// we are done with vertex data, deleting it.
+		for (int i = 0; i < numVertices; i++) {
+			delete[] vertexData[i];
+		}
+		delete[] vertexData;
+
 		calculateBounds();
 	}
 	else {

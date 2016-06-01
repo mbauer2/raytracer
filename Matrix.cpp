@@ -70,6 +70,23 @@ Matrix::Matrix(const Matrix& m) {
 	}
 }
 
+Matrix& Matrix::operator=(Matrix m) {
+	//Swap data so the old one is cleaned up by falling out of scope
+	int tempHeight = m.getHeight();
+	m.height = height;
+	height = tempHeight;
+
+	int tempWidth = m.getWidth();
+	m.width = width;
+	width = tempWidth;
+
+	float** tempData = m.data;
+	m.data = data;
+	data = tempData;
+
+	return *this;
+}
+
 Matrix::~Matrix()
 {
 	for (int i = 0; i < height; i++) {
@@ -120,10 +137,11 @@ void Matrix::multiply(Matrix other_matrix) {
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < other_matrix.getWidth(); j++) {
+			float sum = 0;
 			for (int l = 0; l < width; l++) {
-				float newVal = get(i,j) + get(i,l)*other_matrix.get(l,j);
-				target.set(i, j, newVal);
+				sum += get(i,l)*other_matrix.get(l,j);
 			}
+			target.set(i, j, sum);
 		}
 	}
 
@@ -134,10 +152,11 @@ void Matrix::multiply(Matrix other_matrix) {
 void Matrix::multiply(Matrix other_matrix, Matrix& target) const {
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < other_matrix.getWidth(); j++) {
+			float newVal = 0;
 			for (int l = 0; l < width; l++) {
-				float newVal = get(i, j) + get(i, l)*other_matrix.get(l, j);
-				target.set(i, j, newVal);
+				 newVal += get(i, l)*other_matrix.get(l, j);
 			}
+			target.set(i, j, newVal);
 		}
 	}
 }

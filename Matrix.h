@@ -8,6 +8,8 @@ public:
 	Matrix(float**, int, int);
 	Matrix(const Matrix&);
 
+	Matrix& operator = (Matrix);
+
 	void print();
 	float get(int, int) const;
 	void getRow(int, float*) const;

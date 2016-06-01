@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <vld.h>
 
 
 using namespace std;
@@ -53,24 +54,29 @@ int main(int argc, char *argv[])
 
 	vector<string> linesOfFile = readFile(infile);
 
-	Model model = Model(linesOfFile);
-
-	float target1[] = { 1, 0, 0, 0 };
-	float target2[] = { 100, 0, 0, 4 };
-	float target3[] = { 4, 0, 2, 6 };
-	float* target[3] = { target1, target2, target3 };
-
-	Matrix s = Matrix(target, 3,4);
-
-	s.print();
-	cout << s.get(2,3) << endl;
-
+	Model model (linesOfFile);
+	// Identity matrix to start off
+	Matrix currentTransform(4, 1);
+	//currentTransform.print();
+	//Matrix identity(5, 1);
+    Matrix scale = model.getScaleMatrix(7,2,1);
+	
+	//identity.multiply(currentTransform);
+	//identity.print();
+	Matrix translate = model.getTranslationMatrix(30,2,1);
+	Matrix rotate = model.getRotationMatrix(4, 5, 6, 63);
+	translate.multiply(scale);
+	rotate.multiply(translate);
+	//translate.multiply(scale);
+	//rotate.multiply(translate);
+	model.applyTransformationToModel(rotate);
+	//currentTransform.print();
 	/*
 	model.scaleVertices(7, 2, 1);
 	model.translateVertices(30, 2, 1);
 	model.rotateVertices( 4, 5, 6, 63);
 	*/
-	//model.printModelVertices();
+	model.printModelVertices();
 	/*
 	model.scaleVertices(1,1,1);
 	model.calculateBounds();
